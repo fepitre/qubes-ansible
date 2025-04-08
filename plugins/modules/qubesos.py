@@ -300,13 +300,13 @@ class QubesVirt(object):
         vmtype="AppVM",
         label="red",
         template=None,
-        netvm="default",
+        netvm="*default*",
     ):
         """Start the machine via the given vmid"""
         template_vm = ""
         if template:
             template_vm = template
-        if netvm == "default":
+        if netvm == "*default*":
             network_vm = self.app.default_netvm
         elif not netvm:
             network_vm = None
@@ -388,7 +388,7 @@ class QubesVirt(object):
             # To make sure that we allow VMs with netvm
             if prefs["netvm"] == "":
                 netvm = ""
-            elif prefs["netvm"] == "default":
+            elif prefs["netvm"] == "*default*":
                 netvm = self.app.default_netvm
             else:
                 netvm = self.app.domains[prefs["netvm"]]
@@ -510,7 +510,7 @@ def core(module):
                 return VIRT_FAILED, {"Invalid property value type": key}
 
             # Make sure that the netvm exists
-            if key == "netvm" and val not in ["default", "", "none", "None"]:
+            if key == "netvm" and val not in ["*default*", "", "none", "None"]:
                 try:
                     vm = v.get_vm(val)
                 except KeyError:
