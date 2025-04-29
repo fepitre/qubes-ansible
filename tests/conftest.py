@@ -15,7 +15,7 @@ class Module:
         pytest.fail(f"Module failed: {kwargs}")
 
     def exit_json(self, **kwargs):
-        print(kwargs)
+        pass
 
 
 @pytest.fixture(scope="function")
