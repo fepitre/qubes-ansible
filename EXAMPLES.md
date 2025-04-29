@@ -213,10 +213,10 @@ The module supports the following states:
 - **pause**
 - **running**
 - **shutdown**
-- **undefine**
+- **absent**
 - **present**
 
-**Warning:** The `undefine` state will remove the qube and all associated data. Use with caution.
+**Warning:** The `absent` state will remove the qube and all associated data. Use with caution.
 
 ## Different available commands
 

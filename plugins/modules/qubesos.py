@@ -50,8 +50,8 @@ options:
       - When set to C(shutdown), ensures the VM is stopped.
       - When set to C(destroyed), forces the VM to shut down.
       - When set to C(pause), pauses a running VM.
-      - When set to C(undefine), removes the VM definition.
-    choices: [ present, running, shutdown, destroyed, pause, undefine ]
+      - When set to C(absent), removes the VM definition.
+    choices: [ present, running, shutdown, destroyed, pause, absent ]
   command:
     description:
       - Non-idempotent command to execute on the VM.
@@ -147,6 +147,7 @@ VM_COMMANDS = [
     "destroy",
     "pause",
     "shutdown",
+    "remove",
     "status",
     "start",
     "stop",
@@ -333,11 +334,11 @@ class QubesVirt(object):
         """Pull the virtual power from the virtual domain, giving it virtually no time to virtually shut down."""
 
         vm = self.get_vm(vmname)
-        vm.force_shutdown()
+        vm.kill()
         return 0
 
     def properties(self, vmname, prefs, vmtype, label, vmtemplate):
-        "Sets the given properties to the VM"
+        """Sets the given properties to the VM"""
         changed = False
         values_changed = []
         try:
@@ -455,14 +456,14 @@ class QubesVirt(object):
 
         return changed, values_changed
 
-    def undefine(self, vmname):
-        """Stop a domain, and then wipe it from the face of the earth.  (delete disk/config file)"""
+    def remove(self, vmname):
+        """Stop a domain, and then wipe it from the face of the earth. (delete disk/config file)"""
         try:
             self.destroy(vmname)
         except QubesVMNotStartedError:
-            pass
             # Because it is not running
-
+            pass
+        print("toto")
         while True:
             if self.__get_state(vmname) == "shutdown":
                 break
@@ -477,7 +478,7 @@ class QubesVirt(object):
         return self.__get_state(vmname)
 
     def tags(self, vmname, tags):
-        "Adds a list of tags to the vm"
+        """Adds a list of tags to the vm"""
         vm = self.get_vm(vmname)
         for tag in tags:
             vm.tags.add(tag)
@@ -615,7 +616,6 @@ def core(module):
             if not isinstance(res, dict):
                 res = {command: res}
             return VIRT_SUCCESS, res
-
         elif hasattr(v, command):
             res = getattr(v, command)()
             if not isinstance(res, dict):
@@ -627,8 +627,7 @@ def core(module):
 
     if state:
         if not guest:
-            module.fail_json(msg="state change requires a guest specified")
-
+            module.fail_json(msg="State change requires a guest specified")
         if state == "running":
             if v.status(guest) is "paused":
                 res["changed"] = True
@@ -648,16 +647,16 @@ def core(module):
             if v.status(guest) is "running":
                 res["changed"] = True
                 res["msg"] = v.pause(guest)
-        elif state == "undefine":
-            if v.status(guest) is not "shutdown":
+        elif state == "absent":
+            if v.status(guest) is "shutdown":
                 res["changed"] = True
-                res["msg"] = v.undefine(guest)
+                res["msg"] = v.remove(guest)
         else:
-            module.fail_json(msg="unexpected state")
+            module.fail_json(msg="Unexpected state")
 
         return VIRT_SUCCESS, res
 
-    module.fail_json(msg="expected state or command parameter to be specified")
+    module.fail_json(msg="Expected state or command parameter to be specified")
 
 
 def main():
@@ -671,7 +670,7 @@ def main():
                     "pause",
                     "running",
                     "shutdown",
-                    "undefine",
+                    "absent",
                     "present",
                 ],
             ),
