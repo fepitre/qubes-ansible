@@ -677,7 +677,7 @@ def main():
             command=dict(type="str", choices=ALL_COMMANDS),
             label=dict(type="str", default="red"),
             vmtype=dict(type="str", default="AppVM"),
-            template=dict(type="str", default="default"),
+            template=dict(type="str", default=None),
             properties=dict(type="dict", default={}),
             tags=dict(type="list", default=[]),
         ),
