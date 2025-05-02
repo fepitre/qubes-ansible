@@ -16,6 +16,14 @@ to manage QubesOS virtual machines. The files are installed into the Ansible mod
 Ansible can automatically discover and use them. This package is intended to be installed in dom0
 (or a management qube).
 
+%package tests
+Summary:    Tests for the module and the connection
+Requires:   %{name}
+Requires:   pytest
+
+%description tests
+Tests for the module and the connection.
+
 %prep
 %autosetup
 
@@ -25,15 +33,21 @@ Ansible can automatically discover and use them. This package is intended to be 
 rm -rf %{buildroot}
 %{__mkdir} -p %{buildroot}%{_datadir}/ansible/plugins/modules
 %{__mkdir} -p %{buildroot}%{_datadir}/ansible/plugins/connection
+%{__mkdir} -p %{buildroot}%{_datadir}/ansible/tests
 
 # Install the qubesos module and qubes connection plugin
 install -m 644 plugins/modules/qubesos.py %{buildroot}%{_datadir}/ansible/plugins/modules/qubesos.py
 install -m 644 plugins/connection/qubes.py %{buildroot}%{_datadir}/ansible/plugins/connection/qubes.py
 
+install -m 644 tests/*.py %{buildroot}%{_datadir}/ansible/tests/
+
 %files
 %doc README.md LICENSE EXAMPLES.md
 %{_datadir}/ansible/plugins/modules/qubesos.py
 %{_datadir}/ansible/plugins/connection/qubes.py
+
+%files tests
+%{_datadir}/ansible/tests/*.py
 
 %changelog
 @CHANGELOG@
