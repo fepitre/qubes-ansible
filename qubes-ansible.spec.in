@@ -9,6 +9,7 @@ BuildArch:  noarch
 Source0:    %{name}-%{version}.tar.gz
 
 Requires:   ansible
+Requires:   qubes-core-admin-client
 
 %description
 qubes-ansible provides an Ansible connection plugin ("qubes") and an Ansible module ("qubesos")
