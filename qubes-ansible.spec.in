@@ -9,6 +9,7 @@ BuildArch:  noarch
 Source0:    %{name}-%{version}.tar.gz
 
 Requires:   ansible
+Requires:   qubes-core-admin-client
 
 %description
 qubes-ansible provides an Ansible connection plugin ("qubes") and an Ansible module ("qubesos")
@@ -19,7 +20,7 @@ Ansible can automatically discover and use them. This package is intended to be 
 %package tests
 Summary:    Tests for the module and the connection
 Requires:   %{name}
-Requires:   pytest
+Requires:   python3-pytest
 
 %description tests
 Tests for the module and the connection.
