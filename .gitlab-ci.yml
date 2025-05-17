@@ -5,5 +5,22 @@ include:
     project: QubesOS/qubes-continuous-integration
   - file: /r4.3/gitlab-host.yml
     project: QubesOS/qubes-continuous-integration
-  - file: /r4.3/gitlab-vm.yml
-    project: QubesOS/qubes-continuous-integration
+
+.mgmt-host-template:
+  stage: tests
+  tags:
+    - vm-kvm
+  script:
+    # install dependencies
+    - sudo qubes-dom0-update -y ansible python3-pytest
+    # install from artifacts
+    - find $CI_PROJECT_DIR/artifacts/repository -name '*.noarch.rpm' -exec sudo dnf install -y {} \+
+    # run ansible's tests
+    - PYTHONPATH=/usr/share/ansible pytest -vvv /usr/share/ansible/tests/
+
+r4.3:mgmt-host:
+  extends: .mgmt-host-template
+  needs:
+    - r4.3:build:host-fc41
+  variables:
+    VM_IMAGE: qubes_4.3_64bit_stable.qcow2
