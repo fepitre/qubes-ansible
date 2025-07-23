@@ -121,7 +121,7 @@ options:
           - virt_mode (str)
           - features (dict)
           - services (list)
-          - volume (dict; must include both 'name' and 'size')
+          - volumes (list of dict that must include both 'name' and 'size')
     default: {}
   tags:
     description:
@@ -241,7 +241,7 @@ PROPS = {
     "shutdown_timeout": int,
     "features": dict,
     "services": list,
-    "volume": dict,
+    "volumes": list,
 }
 
 
@@ -424,7 +424,7 @@ class QubesVirt(object):
             )
             vm.netvm = network_vm
         elif vmtype in ["StandaloneVM", "TemplateVM"] and template_vm:
-            vm = self.app.clone_vm(template_vm, vmname, vmtype)
+            vm = self.app.clone_vm(template_vm, vmname, vmtype, ignore_devices=True)
             vm.label = label
         return 0
 
@@ -500,15 +500,15 @@ class QubesVirt(object):
                 if changed and "features" not in values_changed:
                     values_changed.append("features")
 
-            elif key == "volume":
-                val = prefs["volume"]
-                try:
-                    volume = vm.volumes[val["name"]]
-                    volume.resize(val["size"])
-                except Exception:
-                    return VIRT_FAILED, {"Failure in updating volume": val}
-                changed = True
-                values_changed.append("volume")
+            elif key == "volumes":
+                for vol in prefs.get("volumes", []):
+                    try:
+                        volume = vm.volumes[vol["name"]]
+                        volume.resize(vol["size"])
+                    except Exception:
+                        return VIRT_FAILED, {"Failure in updating volume": vol["name"]}
+                    changed = True
+                    values_changed.append(f"volume:{vol["name"]}")
 
             else:
                 current = getattr(vm, key)
@@ -777,20 +777,19 @@ def core(module):
                 netvm = vm
 
             # Make sure volume has both name and value
-            if key == "volume":
-                if "name" not in val:
-                    return VIRT_FAILED, {"Missing name for the volume": val}
-                if "size" not in val:
-                    return VIRT_FAILED, {"Missing size for the volume": val}
-
-                allowed_name = []
-                if vmtype == "AppVM":
-                    allowed_name.append("private")
-                elif vmtype in ["StandAloneVM", "TemplateVM"]:
-                    allowed_name.append("root")
-
-                if not val["name"] in allowed_name:
-                    return VIRT_FAILED, {"Wrong volume name": val}
+            if key == "volumes":
+                if not isinstance(val, list):
+                    return VIRT_FAILED, {"Invalid volumes provided": val}
+                for vol in val:
+                    try:
+                        if "name" not in vol:
+                            return VIRT_FAILED, {"Missing name for the volume": vol}
+                        if "size" not in vol:
+                            return VIRT_FAILED, {"Missing size for the volume": vol}
+                        if not vol["name"] in ["root", "private"]:
+                            return VIRT_FAILED, {"Wrong volume name": vol["name"]}
+                    except KeyError:
+                        return VIRT_FAILED, {"Invalid volume provided": vol}
 
             # Make sure that the default_dispvm exists
             if key == "default_dispvm":

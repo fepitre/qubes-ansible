@@ -181,9 +181,9 @@ A qube's volume can be resized using the *volume* property.
             maxmem: 2400
             netvm: 'sys-whonix'
             label: "yellow"
-            volume:
-              name: "private"
-              size: "5368709120"
+            volumes:
+              - name: "private"
+                size: "5368709120"
 ```
 
 ## Adding tags to a qube

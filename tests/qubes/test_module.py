@@ -89,6 +89,49 @@ def test_lifecycle_status_reporting(qubes, vmname, request):
     core(Module({"state": "absent", "name": vmname}))
 
 
+def test_volumes_list_for_standalonevm(qubes, vmname, request):
+    request.node.mark_vm_created(vmname)
+
+    # Create StandaloneVM
+    rc, res = core(
+        Module(
+            {
+                "state": "present",
+                "name": vmname,
+                "vmtype": "StandaloneVM",
+                "template": "debian-12-xfce",
+                "properties": {
+                    "volumes": [
+                        {"name": "root", "size": 32212254720},
+                        {"name": "private", "size": 10737418240},
+                    ]
+                },
+            }
+        )
+    )
+    assert rc == VIRT_SUCCESS
+    vm = qubes.domains[vmname]
+    assert vm.klass == "StandaloneVM"
+    assert vm.volumes["root"].size == 32212254720
+    assert vm.volumes["private"].size == 10737418240
+
+    # Resize root
+    rc2, res2 = core(
+        Module(
+            {
+                "state": "present",
+                "name": vmname,
+                "properties": {
+                    "volumes": [{"name": "root", "size": 42949672960}]
+                },
+            }
+        )
+    )
+    assert rc2 == VIRT_SUCCESS
+    assert "volume:root" in res2.get("Properties updated", [])
+    assert vm.volumes["root"].size == 42949672960
+
+
 def test_inventory_generation_and_grouping(tmp_path, qubes):
     # Use a temporary directory for inventory
     os.chdir(tmp_path)
@@ -261,7 +304,7 @@ def test_properties_invalid_volume_name_for_appvm(qubes, vmname, request):
             {
                 "state": "present",
                 "name": vmname,
-                "properties": {"volume": {"name": "root", "size": 10}},
+                "properties": {"volumes": [{"name": "root", "size": 10}]},
             }
         )
     )
@@ -276,7 +319,7 @@ def test_properties_missing_volume_fields(qubes, vmname, request):
             {
                 "state": "present",
                 "name": vmname,
-                "properties": {"volume": {"size": 10}},
+                "properties": {"volumes": [{"size": 10}]},
             }
         )
     )
@@ -289,7 +332,7 @@ def test_properties_missing_volume_fields(qubes, vmname, request):
             {
                 "state": "present",
                 "name": vmname,
-                "properties": {"volume": {"name": "private"}},
+                "properties": {"volumes": [{"name": "private"}]},
             }
         )
     )
