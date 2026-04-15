@@ -12,30 +12,44 @@ lint:
   extends: .lint
   stage: tests
 
-.mgmt-host-template:
+.qubes-ansible-tests:
   stage: tests
   tags:
     - vm-kvm
-  after_script:
-    - ci/codecov-wrapper -F unittests
-  before_script:
+
+  before_script: &install_qubes_ansible
     # install dependencies
     - sudo qubes-dom0-update -y
     - sudo qubes-dom0-update -y ansible python3-pytest python3-coverage perl-Digest-SHA
     # install from artifacts
     - find $CI_PROJECT_DIR/artifacts/repository/host-fc* -name '*.noarch.rpm' -exec sudo dnf install -y {} \+
     - $CI_PROJECT_DIR/ci/install_ansible_vm.sh
+
+  after_script:
+    - ci/codecov-wrapper -F unittests
+
+  variables:
+    VM_IMAGE: qubes_4.3_64bit_stable.qcow2
+
+  needs:
+    - r4.3:build:host-fc41
+    - r4.3:build:vm-fc42
+
+r4.3:mgmt-host:
+  extends: .qubes-ansible-tests
   script:
     # run ansible's tests
     - cd /usr/share/ansible && sudo coverage run --data-file=$CI_PROJECT_DIR/.coverage --include=plugins/modules/qubesos.py,plugins/connection/qubes.py -m pytest -vvv tests/qubes/
 
-r4.3:mgmt-host:
-  extends: .mgmt-host-template
-  needs:
-    - r4.3:build:host-fc41
-    - r4.3:build:vm-fc42
-  variables:
-    VM_IMAGE: qubes_4.3_64bit_stable.qcow2
+r4.3:mgmtvm:
+  extends: .qubes-ansible-tests
+
+  before_script:
+    - *install_qubes_ansible
+    - $CI_PROJECT_DIR/ci/install_mgmtvm.sh
+  script:
+    # run ansible's tests
+    - qvm-run -p -u root mgmtvm 'cd /usr/share/ansible ; coverage run --data-file=/root/.coverage --include=plugins/modules/qubesos.py,plugins/connection/qubes.py -m pytest -vvv tests/qubes/'
 
 pages:
   stage: build
@@ -53,3 +67,4 @@ pages:
     - antsibull-docs sphinx-init qubesos.* --use-current --dest-dir build/
     - ANSIBLE_COLLECTIONS_PATH=$(pwd) ./build/build.sh
     - mv build/build/html/* public/
+
