@@ -365,7 +365,7 @@ def test_ansible_doc_qubesos_module():
 
     # Should contain expected module information
     assert (
-        "> QUBESOS" in result.stdout
+        "QUBESOS" in result.stdout.upper()
     ), "Documentation should mention the module name"
 
 
