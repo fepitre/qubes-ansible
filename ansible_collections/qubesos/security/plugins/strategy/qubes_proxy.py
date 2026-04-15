@@ -16,10 +16,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 import asyncio
-import fcntl
 import multiprocessing
 import os
-import re
 import shutil
 import subprocess
 import tarfile
