@@ -15,7 +15,7 @@ temp_dir="$(mktemp -d)"
 # shellcheck disable=SC2064
 trap "rm -rf '$temp_dir'" EXIT
 
-tar_file_path="/home/user/QubesIncoming/dom0/${tar_file}"
+tar_file_path="/home/user/QubesIncoming/${QREXEC_REMOTE_DOMAIN}/${tar_file}"
 [ -f "$tar_file_path" ] || exit 1
 
 tar -C "$temp_dir" -xf "$tar_file_path"

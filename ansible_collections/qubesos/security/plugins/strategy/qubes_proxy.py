@@ -16,6 +16,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 import asyncio
+import functools
 import multiprocessing
 import os
 import shutil
@@ -72,6 +73,9 @@ RPC_SYS_POLICY_FILES = (
     Path("/etc/qubes/policy.d/include/admin-local-rwx"),
     Path("/etc/qubes/policy.d/include/admin-global-ro"),
 )
+
+QFILE_AGENT_PATH_DOM0 = "/usr/lib/qubes/qfile-dom0-agent"
+QFILE_AGENT_PATH_VM = "/usr/lib/qubes/qfile-agent"
 
 DISPVM_NAME_MAXLEN = 31
 
@@ -428,11 +432,15 @@ class QubesPlayExecutor:
             ansible_args = self._build_ansible_args()
 
             self.vvv(f"Copying {tar_file_path} to {self.vm}")
+            if os.path.exists(QFILE_AGENT_PATH_DOM0):
+                localcmd = QFILE_AGENT_PATH_DOM0
+            else:
+                localcmd = QFILE_AGENT_PATH_VM
+
+            localcmd += f" {tar_file_path}"
             dispvm.run_service(
                 "qubes.Filecopy",
-                localcmd="/usr/lib/qubes/qfile-dom0-agent {}".format(
-                    tar_file_path
-                ),
+                localcmd=localcmd,
             ).wait()
 
             self.vvv(f"Running qubes.AnsibleVM on {self.vm}")
