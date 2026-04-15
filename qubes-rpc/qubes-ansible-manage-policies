@@ -1,0 +1,103 @@
+#!/usr/bin/python3
+#
+# The Qubes OS Project, https://www.qubes-os.org/
+#
+# Copyright (C) 2026 Guillaume Chinal <guiiix@invisiblethingslab.com>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+import fcntl
+import os
+import qubesadmin
+import re
+import sys
+
+
+QUBES_ANSIBLE_POLICY_FILE = "/run/qubes/policy.d/30-qubes-ansible.policy"
+
+
+def check_tag(dispvm):
+    app = qubesadmin.Qubes()
+    remote_domain = os.environ['QREXEC_REMOTE_DOMAIN']
+    if remote_domain == "dom0":
+        return
+    expected_tag = f"created-by-{remote_domain}"
+    if not expected_tag in app.domains[dispvm].tags:
+        print(
+            f"${remote_domain} is not allowed to grant permissions to {dispvm}",
+            file=sys.stderr
+        )
+        exit(1)
+
+
+def create_policies(target_mgmt_dispvm, target):
+    with open(QUBES_ANSIBLE_POLICY_FILE, "a+") as pol_file:
+        fcntl.lockf(pol_file.fileno(), fcntl.LOCK_EX)
+        pol_file.write(
+            f"qubes.Filecopy        * {target_mgmt_dispvm} {target} allow\n"
+            f"qubes.VMRootShell     * {target_mgmt_dispvm} {target} allow\n"
+            f"qubes.VMShell         * {target_mgmt_dispvm} {target} allow\n"
+            f"qubes.WaitForSession  * {target_mgmt_dispvm} {target} allow\n"
+            f"admin.vm.CurrentState * {target_mgmt_dispvm} {target} allow target=dom0\n"
+            f"admin.vm.List         * {target_mgmt_dispvm} {target} allow target=dom0\n"
+            f"admin.vm.List         * {target_mgmt_dispvm} dom0 allow\n"
+        )
+        pol_file.flush()
+        os.fsync(pol_file.fileno())
+
+
+def remove_policies(target_mgmt_dispvm):
+    with open(QUBES_ANSIBLE_POLICY_FILE, "a+") as pol_file:
+        fcntl.lockf(pol_file.fileno(), fcntl.LOCK_EX)
+        pol_file.seek(0)
+        new_file_lines = [
+            line
+            for line in pol_file.readlines()
+            if not re.match(
+                rf"^\s*\S+\s+\S+\s+{re.escape(target_mgmt_dispvm)}\s+",
+                line,
+            )
+        ]
+        pol_file.seek(0)
+        pol_file.truncate()
+        pol_file.write("".join(new_file_lines))
+        pol_file.flush()
+        os.fsync(pol_file.fileno())
+
+
+def main(argv):
+    if len(argv) != 2:
+        print("1 argument is expected", file=sys.stderr)
+        exit(1)
+
+    target = os.environ["QREXEC_REQUESTED_TARGET"]
+    service = os.environ["QREXEC_SERVICE_FULL_NAME"]
+    target_mgmt_dispvm = sys.argv[1].strip()
+
+    check_tag(target_mgmt_dispvm)
+
+    if service.startswith("ansible.CreateManagementPolicies"):
+        create_policies(target_mgmt_dispvm, target)
+
+    elif service.startswith("ansible.RemoveManagementPolicies"):
+        remove_policies(target_mgmt_dispvm)
+
+    else:
+        exit(1)
+
+
+if __name__ == '__main__':
+    main(sys.argv)
