@@ -53,14 +53,14 @@ will raise an error and interrupt Ansible execution.
 
 ## Installation
 
-### AdminVM (dom0)
+### Dom0
 
-Install the following package: ``qubes-ansible-dom0``
+Install the following package: ``qubes-ansible``.
 
 ### Management DVM
 
 The package ``qubes-ansible-vm`` (``qubes-ansible`` for Debian and Archlinux) must be installed 
-on templates used by your qubes management DVM (``default-mgmt-dvm`` by default).
+in the templates used by your management DVM (``default-mgmt-dvm`` by default).
 
 ## Usage
 
@@ -127,31 +127,96 @@ limitations:
   * Play recap will reflect the number of plays ran for each host instead of the number of tasks
   * Only plain text output is supported
 
-## Management VM
+## Management VM (advanced)
 
-Usage of this module with a Management VM is not yet supported. However, the 
-following policies may be added if doing so:
+You can use a dedicated qube to run your Ansible playbooks. Install the
+package `qubes-ansible-admin`: it will deploy the `qubesos.core` collection and
+all the `qubesos.security` plugins.
 
-Append the following lines to `/etc/qubes/policy.d/include/admin-local-rwx`:
+Then, you will need to write policies that fit your needs. 
+
+First, you can add the following lines to `/etc/qubes/policy.d/include/admin-local-rwx`:
 ```
 mgmtvm @tag:created-by-mgmtvm allow target=dom0
 mgmtvm mgmtvm                 allow target=dom0
 ```
 
-Append the following lines to `/etc/qubes/policy.d/include/admin-global-ro`:
+And append the following lines to `/etc/qubes/policy.d/include/admin-global-ro`:
 ```
 mgmtvm @adminvm               allow target=dom0
 mgmtvm @tag:created-by-mgmtvm allow target=dom0
 mgmtvm mgmtvm                 allow target=dom0
 ```
 
-Create a policy file at `/etc/qubes/policy.d/30-ansible.policy` with the 
-following content:
+This lets your ManagementVM manage the qubes it creates.
+
+You may also want to allow your ManagementVM to read properties of sys vms and 
+several templates. For example, when setting a netvm to a qube, the module checks 
+if the target qube exits and provides network, which requires the mgmtvm to be 
+able to read the target qube properties:
+
+`/etc/qubes/policy.d/include/admin-global-ro`:
 ```
-admin.vm.Create.AppVM        * mgmtvm dom0                   allow
-admin.vm.Create.StandaloneVM * mgmtvm dom0                   allow
-admin.vm.Create.TemplateVM   * mgmtvm dom0                   allow
-admin.vm.Remove              * mgmtvm @tag:created-by-mgmtvm allow target=dom0
+mgmtvm sys-net                allow target=dom0
+mgmtvm sys-firewall           allow target=dom0
+mgmtvm sys-usb                allow target=dom0
+mgmtvm debian-13-xfce         allow target=dom0
+mgmtvm fedora-42-xfce         allow target=dom0
+```
+
+`/etc/qubes/policy.d/include/admin-local-ro`:
+```
+mgmtvm sys-net                allow target=dom0
+mgmtvm sys-firewall           allow target=dom0
+mgmtvm sys-usb                allow target=dom0
+mgmtvm debian-13-xfce         allow target=dom0
+mgmtvm fedora-42-xfce         allow target=dom0
+```
+
+Then, create a policy file at `/etc/qubes/policy.d/30-mgmtvm.policy` and adjust 
+its content to fit your security requirements:
+```
+# =================
+# Qubes management
+# =================
+
+# The ManagementVM must be able to create new qubes and manage them
+admin.vm.Create.AppVM            * mgmtvm dom0                   allow
+admin.vm.Create.StandaloneVM     * mgmtvm dom0                   allow
+admin.vm.Create.TemplateVM       * mgmtvm dom0                   allow
+
+
+# You may want to allow to clone some template to create StandaloneVMs or new TemplateVMs
+admin.vm.volume.CloneFrom        * mgmtvm debian-13-xfce         allow target=dom0
+admin.vm.volume.CloneFrom        * mgmtvm fedora-42-xfce         allow target=dom0
+
+# And to remove created ones
+admin.vm.Remove                  * mgmtvm @tag:created-by-mgmtvm allow target=dom0
+
+# Get available devices (qubesos.core.host_devices_facs)
+admin.vm.device.pci.Available    * mgmtvm dom0 allow
+admin.vm.device.block.Available  * mgmtvm dom0 allow
+
+# You may want to assign devices to your qubes
+admin.vm.device.pci.Assign       * mgmtvm @tag:created-by-mgmtvm allow target=dom0
+
+# =============
+# Proxy Plugin
+# =============
+
+# The proxy creates a dispvm from the management dvm of the managed qubes
+# Copy these lines for each value of the management_dispvm preference used by your qubes.
+admin.vm.Create.DispVM           +default-mgmt-dvm mgmtvm dom0 allow
+admin.vm.property.Get            +label            mgmtvm default-mgmt-dvm allow target=dom0
+
+# Allow mgmtvm to call RPC managing dynamic policy creation allowing to run the
+# connection plugin
+ansible.CreateManagementPolicies * mgmtvm @tag:created-by-mgmtvm allow target=dom0
+ansible.RemoveManagementPolicies * mgmtvm @tag:created-by-mgmtvm allow target=dom0
+
+# The proxy needs to copy and execute playbooks on DispVMs
+qubes.AnsibleVM                  * mgmtvm @tag:created-by-mgmtvm allow
+qubes.Filecopy                   * mgmtvm @tag:created-by-mgmtvm allow
 ```
 
 ## Legacy module `qubesos`
