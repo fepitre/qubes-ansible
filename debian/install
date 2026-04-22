@@ -9,3 +9,4 @@
 /usr/share/ansible/collections/ansible_collections/qubesos/core/plugins/modules/command.py
 /usr/share/ansible/collections/ansible_collections/qubesos/core/plugins/modules/host_devices_facts.py
 /usr/share/ansible/collections/ansible_collections/qubesos/core/plugins/modules/qube.py
+/usr/share/ansible/collections/ansible_collections/qubesos/core/plugins/modules/qubes_dom0_update.py
