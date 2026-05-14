@@ -20,6 +20,10 @@ from ansible_collections.qubesos.core.plugins.module_utils.qubes_module_command 
     main as qubesos_core_command_main,
 )
 
+from ansible_collections.qubesos.core.plugins.modules.qube_facts import (
+    main as qubesos_core_qube_facts_main,
+)
+
 
 class AnsibleExitJson(Exception):
     pass
@@ -67,6 +71,10 @@ def run_module_qubesos_core_host_devices_facts(args):
 
 def run_module_qubesos_core_command(args):
     return run_patched_module(args, qubesos_core_command_main)
+
+
+def run_module_qubesos_core_qube_facts(args):
+    return run_patched_module(args, qubesos_core_qube_facts_main)
 
 
 def run_module_qubesos_legacy(args):
