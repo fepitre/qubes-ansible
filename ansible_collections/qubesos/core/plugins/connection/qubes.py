@@ -50,6 +50,7 @@ DOCUMENTATION = """
             - name: ansible_user
 """
 
+import shutil
 import subprocess
 
 from ansible.module_utils.common.text.converters import to_bytes
@@ -98,13 +99,19 @@ class Connection(ConnectionBase):
         if not cmd.endswith("\n"):
             cmd += "\n"
 
-        local_cmd = [
-            "qvm-run",
-            "--no-gui",
-            "--pass-io",
-            "--service",
-            self._remote_vmname,
-        ]
+        if shutil.which("qrexec-client-vm"):
+            local_cmd = [
+                "qrexec-client-vm",
+                self._remote_vmname,
+            ]
+        else:
+            local_cmd = [
+                "qvm-run",
+                "--no-gui",
+                "--pass-io",
+                "--service",
+                self._remote_vmname,
+            ]
         # The Ansible module framework catches invalid remote_user values
         if self.user == "root":
             local_cmd.append("qubes.VMRootShell")
@@ -176,15 +183,25 @@ class Connection(ConnectionBase):
         Retrieve a file from the remote VM located at 'in_path' and save it to 'out_path'.
         """
         display.vvv(f"FETCH {in_path} TO {out_path}", host=self._remote_vmname)
-        cmd_args = [
-            "qvm-run",
-            "--pass-io",
-            "--no-gui",
-            self._remote_vmname,
-            f"cat {in_path}",
-        ]
+        if shutil.which("qrexec-client-vm"):
+            cmd_args = [
+                "qrexec-client-vm",
+                self._remote_vmname,
+                "qubes.VMShell",
+            ]
+        else:
+            cmd_args = [
+                "qvm-run",
+                "--pass-io",
+                "--no-gui",
+                "--service",
+                self._remote_vmname,
+                "qubes.VMShell",
+            ]
         with open(out_path, "wb") as fobj:
-            result = subprocess.run(cmd_args, stdout=fobj)
+            result = subprocess.run(
+                cmd_args, stdout=fobj, input=f"cat {in_path}".encode()
+            )
         if result.returncode != 0:
             raise RuntimeError(f"Failed to fetch file to {out_path}")
 
