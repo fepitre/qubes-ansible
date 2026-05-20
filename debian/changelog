@@ -1,3 +1,27 @@
+qubes-ansible-vm (1.4.0-1) unstable; urgency=medium
+
+  [ Guillaume Chinal ]
+  * legacy: label param was ignored when properties param was empty
+  * legacy: remove default label value to prevent undesired updates
+  * Distinguish between default and explicitly set properties values
+  * remove default value for Qube class
+  * fix useless check
+  * fix typos
+  * convert tests according to Ansible recommendations
+
+  [ jmynes ]
+  * qubesos: add force parameter to shutdown and restarted states
+
+  [ Guillaume Chinal ]
+  * new module qubesos.core.qube_facts
+  * Add new module qubesos.core.qubes_dom0_update
+  * ci: update system before executing tests
+
+  [ Marek Marczykowski-Górecki ]
+  * Prefer qrexec-client-vm directly
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Wed, 20 May 2026 03:22:31 +0200
+
 qubes-ansible-vm (1.3.1-1) unstable; urgency=medium
 
   * Avoid in-repo absolute symlinks
