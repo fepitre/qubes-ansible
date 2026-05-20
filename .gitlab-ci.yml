@@ -20,6 +20,7 @@ lint:
     - ci/codecov-wrapper -F unittests
   before_script:
     # install dependencies
+    - sudo qubes-dom0-update -y
     - sudo qubes-dom0-update -y ansible python3-pytest python3-coverage perl-Digest-SHA
     # install from artifacts
     - find $CI_PROJECT_DIR/artifacts/repository/host-fc* -name '*.noarch.rpm' -exec sudo dnf install -y {} \+
