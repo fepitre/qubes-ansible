@@ -1,4 +1,4 @@
-Source: qubes-ansible-vm
+Source: qubes-ansible
 Section: admin
 Priority: optional
 Maintainer: Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>
@@ -6,11 +6,36 @@ Standards-Version: 4.7.0
 Build-Depends: debhelper-compat (= 13)
 Homepage: https://www.qubes-os.org/
 
-Package: qubes-ansible-vm
+Package: qubes-ansible
 Architecture: any
 Depends:
  ansible,
  qubes-core-admin-client,
  ${python3:Depends},
  ${misc:Depends}
+Recommends: qubes-ansible-vm
+Breaks: qubes-ansible-vm (<< 1.4.1)
+Replaces: qubes-ansible-vm (<< 1.4.1)
+Description: Ansible plugins and collection to manage QubesOS
+ This package provides the Ansible connection plugin and the qubesos.core
+ collection to manage QubesOS virtual machines.
+
+Package: qubes-ansible-vm
+Architecture: all
+Depends:
+ qubes-ansible,
+ ${misc:Depends}
 Description: qubes-ansible RPC script to run Ansible on a disposable VM
+
+Package: qubes-ansible-admin
+Architecture: all
+Depends:
+ qubes-ansible,
+ ${misc:Depends}
+Description: Security plugins to manage QubesOS from a ManagementVM
+ This package contains the qubesos.security collection allowing to run Ansible
+ playbooks on a ManagementVM securely by proxifying plays execution on
+ disposables.
+ .
+ Installing this package edits /etc/ansible/ansible.cfg to set qubes_proxy as
+ the default strategy.

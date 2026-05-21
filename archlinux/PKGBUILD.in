@@ -13,6 +13,5 @@ sha256sums=(SKIP)
 
 package() {
     cd "${_pkgnvr}"
-    make install-common DESTDIR="$pkgdir/"
     make install-vm DESTDIR="$pkgdir/"
 }

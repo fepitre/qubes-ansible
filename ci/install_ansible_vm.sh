@@ -16,7 +16,7 @@ repo_dir="artifacts/repository/vm-fc${fedora_ver}"
 [[ -d "$repo_dir" ]] || err_ex "'$repo_dir' not found"
 
 find $repo_dir -name 'qubes-ansible-*.noarch.rpm' \
-    -not -name  'qubes-ansible-dom0*.noarch.rpm' \
+    -not -name  'qubes-ansible-admin*.noarch.rpm' \
     -not -name  'qubes-ansible-tests*.noarch.rpm' \
     -exec qvm-copy-to-vm "$default_mgmt_dispvm_template" "{}" \;
 

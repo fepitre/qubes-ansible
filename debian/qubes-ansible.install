@@ -1,0 +1,5 @@
+usr/share/ansible/plugins/modules/qubesos.py
+usr/share/ansible/plugins/connection/qubes.py
+usr/share/ansible/collections/ansible_collections/qubesos/core/plugins/connection/qubes.py
+usr/share/ansible/collections/ansible_collections/qubesos/core/plugins/module_utils/*.py
+usr/share/ansible/collections/ansible_collections/qubesos/core/plugins/modules/*.py

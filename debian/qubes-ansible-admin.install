@@ -1,0 +1,5 @@
+usr/share/ansible/plugins/callback/qubesos_strategy_guard.py
+usr/share/ansible/plugins/strategy/qubes_proxy.py
+usr/lib/qubes/update-ansible-default-strategy
+usr/share/ansible/collections/ansible_collections/qubesos/security/plugins/callback/qubesos_strategy_guard.py
+usr/share/ansible/collections/ansible_collections/qubesos/security/plugins/strategy/qubes_proxy.py

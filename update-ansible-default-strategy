@@ -6,6 +6,7 @@ import shutil
 from pathlib import Path
 
 CONFIG_FILE = Path("/etc/ansible/ansible.cfg")
+CONFIG_FILE.parent.mkdir(exist_ok=True)
 CONFIG_FILE.touch()
 c = configparser.ConfigParser(allow_no_value=True)
 c.read(CONFIG_FILE)

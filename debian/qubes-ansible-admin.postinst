@@ -1,0 +1,10 @@
+#!/bin/sh
+set -e
+
+case "$1" in
+    configure|triggered)
+        /usr/lib/qubes/update-ansible-default-strategy
+        ;;
+esac
+
+#DEBHELPER#

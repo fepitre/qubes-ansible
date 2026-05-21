@@ -1,7 +1,7 @@
 host:
   rpm:
     build:
-    - rpm_spec/qubes-ansible.spec
+    - rpm_spec/qubes-ansible-host.spec
 vm:
   rpm:
     build:

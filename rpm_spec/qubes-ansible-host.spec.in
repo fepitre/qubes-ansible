@@ -3,7 +3,7 @@
 Name:       qubes-ansible
 Version:    @VERSION@
 Release:    @REL@%{?dist}
-Summary:    Ansible connection plugin and module for QubesOS
+Summary:    QubesOS official Ansible plugins to manage your QubesOS securely.
 License:    GPLv3+
 URL:        https://github.com/QubesOS/qubes-ansible
 BuildArch:  noarch
@@ -12,24 +12,14 @@ Source0:    %{name}-%{version}.tar.gz
 
 Requires:   ansible
 Requires:   qubes-core-admin-client
+Obsoletes:  qubes-ansible-dom0 < 1.4.1
+Provides:   qubes-ansible-dom0
 
 BuildRequires: make
 
 %description
 This package provides several Ansible plugins to manage your QubesOS system.
-
-
-%package admin
-Obsoletes:  qubes-ansible-dom0 < 1.4.1
-Provides:   qubes-ansible-dom0
-Summary:     Provides security plugins to manage your qubes without exposing your VM.
-Requires:    %{name}
-
-%description admin
-This package contains the qubesos.security collection allowing to run Ansible
-playbooks on a ManagementVM securely by proxifying plays execution on disposables.
-Note that this package edits /etc/ansible/ansible.cfg to set qubes_proxy as the
-default strategy.
+Documentation is available at https://qubesos.gitlab.io/qubesos.
 
 
 %package tests
@@ -41,50 +31,42 @@ Requires:      python3-pytest
 Tests for the module and the connection.
 
 
-%package  vm
-Summary:       qubes-ansible RPC script to run ansible on a disposable VM
-Requires:      %{name}
-
-%description vm
-qubes-ansible RPC script to run ansible on a disposable VM
-
-
 %prep
 %autosetup
 
 
 %install
-make DESTDIR=$RPM_BUILD_ROOT install-vm-all
+make DESTDIR=$RPM_BUILD_ROOT install-dom0
 
-%post admin
+%post
 /usr/lib/qubes/update-ansible-default-strategy
 
-%triggerin admin -- ansible
+%triggerin -- ansible
 /usr/lib/qubes/update-ansible-default-strategy
 
 
 %files
 %doc README.md LICENSE EXAMPLES.md
-%{_datadir}/ansible/plugins/modules/qubesos.py
+%{_datadir}/ansible/plugins/callback/qubesos_strategy_guard.py
 %{_datadir}/ansible/plugins/connection/qubes.py
+%{_datadir}/ansible/plugins/modules/qubesos.py
+%{_datadir}/ansible/plugins/strategy/qubes_proxy.py
+
 %{qubes_collection_dir}/core/plugins/connection/qubes.py
 %{qubes_collection_dir}/core/plugins/module_utils/*.py
 %{qubes_collection_dir}/core/plugins/modules/*.py
-
-%files admin
-%{_datadir}/ansible/plugins/callback/qubesos_strategy_guard.py
-%{_datadir}/ansible/plugins/strategy/qubes_proxy.py
-/usr/lib/qubes/update-ansible-default-strategy
 %{qubes_collection_dir}/security/plugins/callback/qubesos_strategy_guard.py
 %{qubes_collection_dir}/security/plugins/strategy/qubes_proxy.py
+
+%{_sysconfdir}/qubes-rpc/ansible.CreateManagementPolicies
+%{_sysconfdir}/qubes-rpc/ansible.RemoveManagementPolicies
+/usr/lib/qubes/qubes-rpc/qubes-ansible-manage-policies
+
+/usr/lib/qubes/update-ansible-default-strategy
 
 %files tests
 %{_datadir}/ansible/tests/qubes/*.py
 %{_datadir}/ansible/tests/*.cfg
-
-
-%files vm
-%{_sysconfdir}/qubes-rpc/qubes.AnsibleVM
 
 
 %changelog

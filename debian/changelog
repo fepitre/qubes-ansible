@@ -1,3 +1,10 @@
+qubes-ansible (1.4.1-1) unstable; urgency=medium
+
+  * Rename source package from qubes-ansible-vm to qubes-ansible
+  * ManagementVM support
+
+ -- Guillaume Chinal <guiiix@invisiblethingslab.com>  Wed, 06 May 2026 00:00:00 +0200
+
 qubes-ansible-vm (1.4.0-1) unstable; urgency=medium
 
   [ Guillaume Chinal ]
