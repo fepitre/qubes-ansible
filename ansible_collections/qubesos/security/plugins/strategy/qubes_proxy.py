@@ -15,8 +15,6 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-import asyncio
-import functools
 import multiprocessing
 import os
 import shutil
@@ -25,7 +23,6 @@ import tarfile
 import tempfile
 import traceback
 
-from contextlib import suppress
 from pathlib import Path
 
 import qubesadmin
@@ -472,25 +469,7 @@ class QubesPlayExecutor:
             shutil.rmtree(self.temp_dir)
             if not self._dispvm_initially_running:
                 self.vvv(f"Stopping {dispvm.name}")
-                dispvm.shutdown()
-                try:
-                    loop = asyncio.new_event_loop()
-                    asyncio.set_event_loop(loop)
-                    loop.run_until_complete(
-                        asyncio.wait_for(
-                            qubesadmin.events.utils.wait_for_domain_shutdown(
-                                [dispvm]
-                            ),
-                            dispvm.shutdown_timeout,
-                        )
-                    )
-
-                except asyncio.TimeoutError:
-                    try:
-                        display.warning(f"<Qubes> killing {dispvm.name}")
-                        dispvm.kill()
-                    except qubesadmin.exc.QubesVMNotStartedError:
-                        pass
+                dispvm.kill()
 
     def _verbose(self, msg: str, level: int):
         getattr(display, "v" * level)(f"<{self.host_name}> {msg}")
