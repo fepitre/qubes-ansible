@@ -307,8 +307,14 @@ class QubesPlayExecutor:
         dest_roles_path = self.temp_dir / "roles"
         dest_roles_path.mkdir()
 
+        # A play may list the same role multiple times with different
+        # `when:` conditions; only copy each role directory once.
+        seen = set()
         for role in play.get_roles():
             role_path = Path(role.get_role_path())
+            if role_path.name in seen:
+                continue
+            seen.add(role_path.name)
             shutil.copytree(role_path, dest_roles_path / role_path.name)
 
     def _add_rpc_policies(self, dispvm_name):
