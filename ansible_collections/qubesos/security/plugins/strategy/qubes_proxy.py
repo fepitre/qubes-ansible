@@ -15,7 +15,6 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-import multiprocessing
 import os
 import shutil
 import subprocess
@@ -23,6 +22,7 @@ import tarfile
 import tempfile
 import traceback
 
+from multiprocessing.pool import ThreadPool
 from pathlib import Path
 
 import qubesadmin
@@ -533,7 +533,7 @@ class StrategyModule(LinearStrategyModule):
         display.vvv(
             f"<QubesOS> Running play {play} " f"with {self._tqm._forks} forks"
         )
-        pool = multiprocessing.Pool(self._tqm._forks)
+        pool = ThreadPool(self._tqm._forks)
 
         self.qubes_results = {}
         for host in self._inventory.get_hosts(play.hosts):
