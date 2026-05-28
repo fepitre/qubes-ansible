@@ -33,7 +33,7 @@ lint:
 
   needs:
     - r4.3:build:host-fc41
-    - r4.3:build:vm-fc42
+    - r4.3:build:vm-fc43
 
 r4.3:mgmt-host:
   extends: .qubes-ansible-tests
