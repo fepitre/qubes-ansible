@@ -22,6 +22,7 @@ import tarfile
 import tempfile
 import traceback
 
+from contextlib import suppress
 from multiprocessing.pool import ThreadPool
 from pathlib import Path
 
@@ -476,6 +477,11 @@ class QubesPlayExecutor:
             if not self._dispvm_initially_running:
                 self.vvv(f"Stopping {dispvm.name}")
                 dispvm.kill()
+                # Explicit removal: admin.vm.Remove is synchronous, so a
+                # subsequent play reusing the same name cannot race
+                # against an in-flight auto_cleanup.
+                with suppress(qubesadmin.exc.QubesVMNotFoundError, KeyError):
+                    del self.app.domains[dispvm.name]
 
     def _verbose(self, msg: str, level: int):
         getattr(display, "v" * level)(f"<{self.host_name}> {msg}")
