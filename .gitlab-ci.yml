@@ -29,7 +29,7 @@ lint:
     - ci/codecov-wrapper -F unittests
 
   variables:
-    VM_IMAGE: qubes_4.3_64bit_stable.qcow2
+    VM_IMAGE: "qubesos:4.3"
 
   needs:
     - r4.3:build:host-fc41
